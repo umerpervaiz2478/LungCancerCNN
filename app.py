@@ -1,4 +1,4 @@
-"""LungAI educational CT image classification dashboard."""
+"""\"\"\"LungAI educational CT image classification dashboard.\"\"\"
 import io
 from pathlib import Path
 from datetime import datetime
@@ -58,8 +58,8 @@ def report_pdf(record):
     buf = io.BytesIO()
     styles = getSampleStyleSheet()
     story = [Paragraph("LungAI | Research Report", styles["Title"]), Spacer(1, 18)]
-    for line in [f"File: {escape(record["file"])}", f"Time: {record["time"]}",
-                 f"Predicted class: {record["label"]}", f"Highest model score: {record["confidence"]:.2f}%",
+    for line in [f"File: {escape(record[\"file\"])}", f"Time: {record[\"time\"]}",
+                 f"Predicted class: {record[\"label\"]}", f"Highest model score: {record[\"confidence\"]:.2f}%",
                  *[f"{k}: {v:.2f}%" for k,v in record["scores"].items()],
                  "Research only. Not a medical diagnosis. Scores are not calibrated clinical probabilities."]:
         story.extend([Paragraph(line, styles["Normal"]), Spacer(1, 9)])
@@ -82,7 +82,7 @@ with st.sidebar:
     st.caption("Classes: Malignant / Normal / benign")
     st.warning("Research prototype — not a clinical diagnostic tool.")
 
-st.markdown('<div class="hero"><div class="eyebrow">DEEP LEARNING · MEDICAL IMAGING</div><h1>🫁 Lung CT Scan Analyzer</h1><p>Upload a CT image to explore your trained model’s classification scores.</p></div>', unsafe_allow_html=True)
+st.markdown(\'<div class="hero"><div class="eyebrow">DEEP LEARNING · MEDICAL IMAGING</div><h1>🫁 Lung CT Scan Analyzer</h1><p>Upload a CT image to explore your trained model’s classification scores.</p></div>\', unsafe_allow_html=True)
 
 if section == "🔬 Scan Analyzer":
     st.subheader("Upload CT Scan")
@@ -120,8 +120,8 @@ if section == "🔬 Scan Analyzer":
                         st.error(f"Error performing inference: {str(e)}")
             if st.session_state.lung_result is not None:
                 res = st.session_state.lung_result
-                st.success(f"Classification Result: {res["label"]}")
-                st.metric(label="Highest Classification Confidence", value=f"{res["confidence"]:.2f}%")
+                st.success(f"Classification Result: {res[\"label\"]}")
+                st.metric(label="Highest Classification Confidence", value=f"{res[\"confidence\"]:.2f}%")
                 st.subheader("Class Probability Metrics")
                 for class_name, score_pct in res["scores"].items():
                     st.progress(score_pct / 100.0)
@@ -132,11 +132,11 @@ if section == "🔬 Scan Analyzer":
                     st.download_button(
                         label="📥 Download Analysis PDF Report",
                         data=pdf_data,
-                        file_name=f"lungai_report_{datetime.now().strftime('%Y%m%d%H%M')}.pdf",
+                        file_name=f"lungai_report_{datetime.now().strftime(\'%Y%m%d%H%M\')}.pdf",
                         mime="application/pdf"
                     )
                 except ImportError:
-                    st.info("Note: Install 'reportlab' in your python environment to enable PDF report downloading.")
+                    st.info("Note: Install \'reportlab\' in your python environment to enable PDF report downloading.")
 
 elif section == "📊 Analysis History":
     st.subheader("Analysis Session Logs")
@@ -144,9 +144,9 @@ elif section == "📊 Analysis History":
         st.info("No images have been analyzed in this session yet. Results will appear here once you run a scan classification.")
     else:
         for i, item in enumerate(reversed(st.session_state.lung_history)):
-            st.markdown(f"""**Record #{len(st.session_state.lung_history)-i}** - *{item["time"]}*
-                        f"- **File Name:** {item[\"file\"]}"
-                        f"- **Top Prediction:** `{item[\"label\"]}` ({item[\"confidence\"]:.2f}%)""")
+            st.markdown(f"""**Record #{len(st.session_state.lung_history)-i}** - *{item[\"time\"]}*
+- **File Name:** {item[\"file\"]}
+- **Top Prediction:** `{item[\"label\"]}` ({item[\"confidence\"]:.2f}%)""")
             st.write(item["scores"])
             st.divider()
 
