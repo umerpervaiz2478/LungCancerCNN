@@ -1,96 +1,123 @@
-"""LungAI: educational CT image classification dashboard."""
-import io
-from datetime import datetime
-from pathlib import Path
-from html import escape
-
-import numpy as np
-import pandas as pd
-import streamlit as st
-from PIL import Image, UnidentifiedImageError
-
-st.set_page_config(page_title="LungAI | CT Scan Analyzer", page_icon="🫁", layout="wide", initial_sidebar_state="expanded")
-
-LABELS = ["Malignant", "Normal", "Benign"]  # MUST match the training label-index mapping
-MODEL_PATH = Path(__file__).resolve().parent / "Lung_Model.h5"
-
-st.markdown("""<style>
-[data-testid="stAppViewContainer"] {background:linear-gradient(135deg,#071320,#0b2233 65%,#0b1b2b);color:#edf7ff}
-[data-testid="stSidebar"] {background:#0a1c2b;border-right:1px solid #23445a}
-.block-container {max-width:1350px;padding-top:2rem}
-h1,h2,h3 {letter-spacing:-.03em}
-.hero {padding:30px;border-radius:22px;border:1px solid #275568;background:linear-gradient(105deg,#113d4e,#10253a);margin-bottom:20px}
-.hero h1 {color:#f1fbff;font-size:2.4rem;margin:8px 0}
-.hero p {color:#bad2df;margin:0}
-.eyebrow {font-size:.78rem;letter-spacing:2px;color:#5ce4cb;font-weight:800}
-.result {padding:24px;border-radius:18px;background:#122e40;border:1px solid #32617a}
-.result strong {font-size:2rem}
-[data-testid="stMetric"] {border:1px solid #285065;border-radius:14px;padding:15px;background:#102a3c}
-[data-testid="stFileUploader"] {border:1px dashed #43748a;border-radius:14px;padding:10px;background:#10283a}
-.stButton button[kind="primary"] {background:#16bca8;color:#041a23;border:none;font-weight:750}
-</style>""", unsafe_allow_html=True)
-
-@st.cache_resource(show_spinner="Loading LungAI model...")
-def load_model(path: str):
-    import tensorflow as tf
     return tf.keras.models.load_model(path, compile=False)
 
-def preprocess(image_bytes: bytes):
+def infer(data):
     import tensorflow as tf
-    with Image.open(io.BytesIO(image_bytes)) as img:
-        rgb = img.convert("RGB").resize((244, 244))
-        batch = np.asarray(rgb, dtype=np.float32)[None, ...]
-    return tf.keras.applications.mobilenet_v2.preprocess_input(batch)
+    with Image.open(io.BytesIO(data)) as im:
+        rgb = im.convert("RGB").resize((244, 244))
+        arr = np.asarray(rgb, dtype=np.float32)[None, ...]
+    arr = tf.keras.applications.mobilenet_v2.preprocess_input(arr)
+    pred = np.asarray(get_model(str(MODEL_PATH)).predict(arr, verbose=0), dtype=float).reshape(-1)
+    if len(pred) != 3 or not np.isfinite(pred).all():
+        raise ValueError("Expected three finite output scores; check model output shape.")
+    if not (np.all(pred >= 0) and np.all(pred <= 1) and np.isclose(pred.sum(), 1, atol=.02)):
+        pred = np.exp(pred - pred.max())
+    return pred / pred.sum()
 
-def scores_from_prediction(prediction):
-    values = np.asarray(prediction, dtype=np.float64).reshape(-1)
-    if values.size != 3 or not np.all(np.isfinite(values)):
-        raise ValueError("Model output must contain exactly three finite class scores.")
-    if np.all(values >= 0) and np.all(values <= 1) and np.isclose(values.sum(), 1, atol=.02):
-        return values / values.sum()
-    exp = np.exp(values - values.max())
-    return exp / exp.sum()
-
-def make_pdf(result):
+def report_pdf(record):
     from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet
+    from xml.sax.saxutils import escape
     buf = io.BytesIO()
     styles = getSampleStyleSheet()
-    story = [Paragraph("LungAI | Research Classification Report", styles["Title"]), Spacer(1, 18)]
-    details = [f"File: {escape(result['filename'])}", f"Time: {result['timestamp']}",
-               f"Predicted class: {result['label']}", f"Highest model score: {result['confidence']:.2f}%"]
-    details += [f"{label}: {score:.2f}%" for label, score in zip(LABELS, result["scores"])]
-    details.append("Research use only. Not a medical diagnosis. Model scores are not calibrated disease probabilities.")
-    for line in details:
-        story.extend([Paragraph(line, styles["Normal"]), Spacer(1, 10)])
+    story = [Paragraph("LungAI | Research Report", styles["Title"]), Spacer(1, 18)]
+    for line in [f"File: {escape(record['file'])}", f"Time: {record['time']}",
+                 f"Predicted class: {record['label']}", f"Highest model score: {record['confidence']:.2f}%",
+                 *[f"{k}: {v:.2f}%" for k,v in record['scores'].items()],
+                 "Research only. Not a medical diagnosis. Scores are not calibrated clinical probabilities."]:
+        story.extend([Paragraph(line, styles["Normal"]), Spacer(1, 9)])
     SimpleDocTemplate(buf, pagesize=A4).build(story)
     return buf.getvalue()
 
-if "history" not in st.session_state:
-    st.session_state.history = []
-if "result" not in st.session_state:
-    st.session_state.result = None
+if "lung_history" not in st.session_state:
+    st.session_state.lung_history = []
+if "lung_result" not in st.session_state:
+    st.session_state.lung_result = None
 
 with st.sidebar:
     st.title("🫁 LungAI")
     st.caption("AI-POWERED CT IMAGE ANALYSIS")
     st.divider()
-    st.markdown("**Dashboard sections**")
-    st.caption("The Scan Analyzer is always visible on the main page. Use the tabs above to switch sections.")
+    section = st.radio("Navigate", ["🔬 Scan Analyzer", "📊 Analysis History", "ℹ️ About LungAI"], index=0)
     st.divider()
-    st.markdown("**Model configuration**")
-    st.write("**Input:** 244 × 244 RGB")
-    st.write("**Classes:** Malignant · Normal · Benign")
-    st.write("**Preprocessing:** MobileNetV2")
+    st.caption("Model input: 244 × 244 RGB")
+    st.caption("Preprocessing: MobileNetV2")
+    st.caption("Classes: Malignant / Normal / Benign")
+    st.warning("Research prototype — not a clinical diagnostic tool.")
+
+st.markdown('<div class="hero"><div class="eyebrow">DEEP LEARNING · MEDICAL IMAGING</div><h1>🫁 Lung CT Scan Analyzer</h1><p>Upload a CT image to explore your trained model’s classification scores.</p></div>', unsafe_allow_html=True)
+
+if section == "🔬 Scan Analyzer":
+    st.subheader("Upload CT Scan")
+    st.caption("Supported formats: PNG, JPG, JPEG. Upload an image to start.")
+    uploaded = st.file_uploader("Select a CT image", type=["png", "jpg", "jpeg"], key="lung_upload")
+    left, right = st.columns([1, 1], gap="large")
+    with left:
+        data = None
+        if uploaded is not None:
+            try:
+                data = uploaded.getvalue()
+                with Image.open(io.BytesIO(data)) as im:
+                    preview = im.convert("RGB")
+                st.image(preview, caption=uploaded.name, use_container_width=True)
+            except (UnidentifiedImageError, OSError, ValueError):
+                st.error("This file could not be opened as an image.")
+        else:
+            st.info("Your uploaded CT image preview will appear here.")
+        if not MODEL_PATH.is_file():
+            st.warning("Lung_Model.h5 is missing. Add it next to app.py to enable predictions.")
+        if st.button("🔬 Analyze CT Scan", type="primary", use_container_width=True, disabled=(data is None or not MODEL_PATH.is_file())):
+            try:
+                with st.spinner("Analyzing image..."):
+                    probs = infer(data)
+                idx = int(np.argmax(probs))
+                record = {"file": uploaded.name, "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                          "label": LABELS[idx], "confidence": float(probs[idx] * 100),
+                          "scores": {label: float(p * 100) for label, p in zip(LABELS, probs)}}
+                st.session_state.lung_result = record
+                st.session_state.lung_history.insert(0, record)
+            except Exception as exc:
+                st.error(f"Prediction failed: {exc}")
+                st.caption("Check model compatibility, class order and preprocessing.")
+    with right:
+        st.subheader("Prediction Results")
+        record = st.session_state.lung_result
+        if record is None:
+            st.info("Upload an image and click Analyze CT Scan to see the classification results.")
+        else:
+            st.metric("Predicted class", record["label"])
+            st.metric("Highest model score", f"{record['confidence']:.2f}%")
+            for label, value in record["scores"].items():
+                st.write(f"**{label}** — {value:.2f}%")
+                st.progress(min(max(value / 100, 0), 1))
+            try:
+                st.download_button("⬇ Download PDF Report", report_pdf(record), "LungAI_report.pdf", "application/pdf", use_container_width=True)
+            except ImportError:
+                st.warning("Install reportlab for PDF export.")
     st.divider()
-    st.warning("Educational research prototype — not for clinical diagnosis.")
+    st.caption("Model scores are not clinically validated disease probabilities. Do not use this app for diagnosis.")
 
-st.markdown('<div class="hero"><div class="eyebrow">DEEP LEARNING · MEDICAL IMAGING</div><h1>🫁 Lung CT Scan Analyzer</h1><p>Upload a CT image, run your trained Keras model, and explore its three classification scores.</p></div>', unsafe_allow_html=True)
+elif section == "📊 Analysis History":
+    st.subheader("Analysis History")
+    if st.session_state.lung_history:
+        rows = [{"Time": r["time"], "File": r["file"], "Prediction": r["label"], "Highest score (%)": round(r["confidence"], 2)} for r in st.session_state.lung_history]
+        st.dataframe(rows, use_container_width=True, hide_index=True)
+        import csv
+        out = io.StringIO()
+        writer = csv.DictWriter(out, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+        st.download_button("⬇ Download History CSV", out.getvalue(), "LungAI_history.csv", "text/csv")
+        if st.button("Clear History"):
+            st.session_state.lung_history = []
+            st.session_state.lung_result = None
+            st.rerun()
+    else:
+        st.info("No predictions yet. Choose Scan Analyzer from the sidebar to upload an image.")
 
-scan_tab, history_tab, about_tab = st.tabs(["🔬 Scan Analyzer", "📊 Analysis History", "ℹ️ About LungAI"])
-
-with scan_tab:
-    a,b,c = st.columns(3)
-    a.metric("Classification classes", "03")
-    b.metric("Image resolution", "244 × 244")
+else:
+    st.subheader("About LungAI")
+    st.write("LungAI is an educational research interface for a Keras CT-image classification model.")
+    st.write("**Classes:** Malignant, Normal, Benign")
+    st.write("**Pipeline:** Upload → RGB → 244 × 244 → MobileNetV2 preprocessing → Model → Classification scores")
+    st.warning("Verify the class-index order and preprocessing against your training notebook. Never treat model output as a medical diagnosis.")
