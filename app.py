@@ -1,3 +1,4 @@
+"""LungAI educational CT image classification dashboard."""
 import io
 from pathlib import Path
 from datetime import datetime
@@ -13,7 +14,8 @@ BASE = Path(__file__).resolve().parent
 MODEL_PATH = BASE / "Lung_Model.h5"
 LABELS = ["Malignant", "Normal", "benign"]
 
-st.markdown("""<style>
+# Custom UI styling with clean hex codes
+style_css = """<style>
 .stApp {background:linear-gradient(125deg,#081827,#0c2636);color:#eef8fc}
 [data-testid="stSidebar"] {background:#0b2030}
 .block-container {max-width:1250px;padding-top:1.8rem}
@@ -24,7 +26,8 @@ st.markdown("""<style>
 [data-testid="stFileUploader"] {background:#102d3e;border-radius:12px;padding:10px;border:1px dashed #528297}
 [data-testid="stMetric"] {background:#123247;border:1px solid #2c6074;padding:15px;border-radius:14px}
 .stButton button[kind="primary"] {background:#20c7b3;color:#04222a;border:none;font-weight:bold}
-</style>""", unsafe_allow_html=True)
+</style>"""
+st.markdown(style_css, unsafe_allow_html=True)
 
 @st.cache_resource(show_spinner="Loading trained model...")
 def get_model(path):
@@ -52,13 +55,12 @@ def report_pdf(record):
         from xml.sax.saxutils import escape
     except ImportError:
         return b"ReportLab library is required to generate the PDF report."
-        
     buf = io.BytesIO()
     styles = getSampleStyleSheet()
     story = [Paragraph("LungAI | Research Report", styles["Title"]), Spacer(1, 18)]
-    for line in [f"File: {escape(record['file'])}", f"Time: {record['time']}",
-                 f"Predicted class: {record['label']}", f"Highest model score: {record['confidence']:.2f}%",
-                 *[f\"\"{k}: {v:.2f}%\"\" for k,v in record['scores'].items()],
+    for line in [f"File: {escape(record["file"])}", f"Time: {record["time"]}",
+                 f"Predicted class: {record["label"]}", f"Highest model score: {record["confidence"]:.2f}%",
+                 *[f"{k}: {v:.2f}%" for k,v in record["scores"].items()],
                  "Research only. Not a medical diagnosis. Scores are not calibrated clinical probabilities."]:
         story.extend([Paragraph(line, styles["Normal"]), Spacer(1, 9)])
     SimpleDocTemplate(buf, pagesize=A4).build(story)
@@ -97,7 +99,6 @@ if section == "🔬 Scan Analyzer":
                 st.image(preview, caption=uploaded.name, use_container_width=True)
             except (UnidentifiedImageError, OSError, ValueError):
                 st.error("This file could not be opened as an image.")
-                
     with right:
         if data is not None:
             if st.button("Run Classification Analysis", type="primary"):
@@ -107,7 +108,6 @@ if section == "🔬 Scan Analyzer":
                         best_idx = int(np.argmax(scores))
                         predicted_label = LABELS[best_idx]
                         confidence_pct = scores[best_idx] * 100
-                        
                         st.session_state.lung_result = {
                             "file": uploaded.name,
                             "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -118,17 +118,14 @@ if section == "🔬 Scan Analyzer":
                         st.session_state.lung_history.append(st.session_state.lung_result)
                     except Exception as e:
                         st.error(f"Error performing inference: {str(e)}")
-            
             if st.session_state.lung_result is not None:
                 res = st.session_state.lung_result
-                st.success(f"Classification Result: {res['label']}")
-                st.metric(label="Highest Classification Confidence", value=f"{res['confidence']:.2f}%")
-                
+                st.success(f"Classification Result: {res["label"]}")
+                st.metric(label="Highest Classification Confidence", value=f"{res["confidence"]:.2f}%")
                 st.subheader("Class Probability Metrics")
                 for class_name, score_pct in res["scores"].items():
                     st.progress(score_pct / 100.0)
                     st.write(f"{class_name}: **{score_pct:.2f}%**")
-                
                 try:
                     import reportlab
                     pdf_data = report_pdf(res)
@@ -147,19 +144,18 @@ elif section == "📊 Analysis History":
         st.info("No images have been analyzed in this session yet. Results will appear here once you run a scan classification.")
     else:
         for i, item in enumerate(reversed(st.session_state.lung_history)):
-            st.markdown(f\"\"\"**Record #{len(st.session_state.lung_history)-i}** - *{item['time']}*
-- **File Name:** {item['file']}
-- **Top Prediction:** `{item['label']}` ({item['confidence']:.2f}%)\"\"\")
+            st.markdown(f"""**Record #{len(st.session_state.lung_history)-i}** - *{item["time"]}*
+                        f"- **File Name:** {item[\"file\"]}"
+                        f"- **Top Prediction:** `{item[\"label\"]}` ({item[\"confidence\"]:.2f}%)""")
             st.write(item["scores"])
             st.divider()
 
 elif section == "ℹ️ About LungAI":
     st.subheader("Project Specifications & Model Configuration")
-    st.write(\"\"\"This application utilizes a custom Convolutional Neural Network (CNN) trained directly on lung CT scan data.
+    st.write("""This application utilizes a custom Convolutional Neural Network (CNN) trained directly on lung CT scan data.
     The user uploads an image, which is processed to run classification across three categories:
     - **Malignant**: High probability patterns indicating tumorous changes.
     - **Normal**: Clean scan tissue structure.
-    - **Benign**: Growth patterns not indicating aggressive malignancy.\"\"\")
-    st.markdown(\"\"\"**Disclaimer**: This tool is created for educational and research prototyping purposes only.
-    It should not be used as clinical advice or for medical diagnosis of any kind.\"\"\")
-"""
+    - **Benign**: Growth patterns not indicating aggressive malignancy.""")
+    st.markdown("""**Disclaimer**: This tool is created for educational and research prototyping purposes only.
+    It should not be used as clinical advice or for medical diagnosis of any kind.""")
