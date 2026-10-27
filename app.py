@@ -368,6 +368,7 @@ if "last_file" not in st.session_state:
     st.session_state.last_file = None
 
 
+
 # ==================================================
 # SIDEBAR NAVIGATION
 # ==================================================
@@ -404,25 +405,30 @@ with st.sidebar:
 
     st.divider()
 
+    # ----------------------------------------------
+    # QUICK ACCESS - ALL PROJECT LINKS
+    # ----------------------------------------------
+
     st.subheader("Quick Access")
 
-    st.link_button(
-        "GitHub Repository",
-        PROJECT_LINKS["GitHub"],
-        use_container_width=True
-    )
+    quick_access_links = [
+        ("Dataset", PROJECT_LINKS["Dataset"]),
+        ("Google Colab Notebook", PROJECT_LINKS["Notebook"]),
+        ("GitHub Repository", PROJECT_LINKS["GitHub"]),
+        ("Live Deployment", PROJECT_LINKS["Deployment"]),
+        ("Project Report", PROJECT_LINKS["Project Report"]),
+        ("Project Presentation", PROJECT_LINKS["Presentation"]),
+        ("YouTube Demonstration", PROJECT_LINKS["YouTube"])
+    ]
 
-    st.link_button(
-        "Project Report",
-        PROJECT_LINKS["Project Report"],
-        use_container_width=True
-    )
+    for title, url in quick_access_links:
+        st.link_button(
+            title,
+            url,
+            use_container_width=True
+        )
 
-    st.link_button(
-        "Watch Demonstration",
-        PROJECT_LINKS["YouTube"],
-        use_container_width=True
-    )
+    st.divider()
 
     st.warning(
         "Educational research prototype. "
