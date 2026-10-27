@@ -1,4 +1,3 @@
-app_py_content = """\"\"\"LungAI educational CT image classification dashboard.\"\"\"
 import io
 from pathlib import Path
 from datetime import datetime
