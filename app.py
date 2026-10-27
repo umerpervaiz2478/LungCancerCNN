@@ -55,7 +55,11 @@ with st.sidebar:
     st.markdown('## 🫁 LungAI')
     st.caption('INTELLIGENT CT IMAGE ANALYSIS')
     st.divider()
-    page = st.radio('Workspace', [' Scan Analyzer', 'Analysis History', ' About Model'], label_visibility='collapsed')
+  page = st.sidebar.selectbox(
+    "Select Page",
+    ["🔬 Scan Analyzer", "📊 Analysis History", "ℹ️ About Model"],
+    index=0
+)
     st.divider()
     st.markdown('**MODEL CONFIGURATION**')
     st.caption('Architecture: Keras / TensorFlow')
