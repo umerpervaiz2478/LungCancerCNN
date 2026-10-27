@@ -11,9 +11,9 @@ from PIL import Image, UnidentifiedImageError
 
 BASE = Path(__file__).resolve().parent
 MODEL_PATH = BASE / "Lung_Model.h5"
-LABELS = ["Malignant", "Normal", "benign"]  # Aligned to exact training class indices
+LABELS = ["Malignant", "Normal", "benign"]
 
-st.markdown("\"\"\"<style>
+st.markdown("""<style>
 .stApp {background:linear-gradient(125deg,#081827,#0c2636);color:#eef8fc}
 [data-testid="stSidebar"] {background:#0b2030}
 .block-container {max-width:1250px;padding-top:1.8rem}
@@ -24,7 +24,7 @@ st.markdown("\"\"\"<style>
 [data-testid="stFileUploader"] {background:#102d3e;border-radius:12px;padding:10px;border:1px dashed #528297}
 [data-testid="stMetric"] {background:#123247;border:1px solid #2c6074;padding:15px;border-radius:14px}
 .stButton button[kind="primary"] {background:#20c7b3;color:#04222a;border:none;font-weight:bold}
-</style>\"\"\", unsafe_allow_html=True)
+</style>""", unsafe_allow_html=True)
 
 @st.cache_resource(show_spinner="Loading trained model...")
 def get_model(path):
@@ -45,7 +45,6 @@ def infer(data):
     return pred / pred.sum()
 
 def report_pdf(record):
-    # Conditional import to prevent failure if reportlab is not installed locally
     try:
         from reportlab.lib.pagesizes import A4
         from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
@@ -59,7 +58,7 @@ def report_pdf(record):
     story = [Paragraph("LungAI | Research Report", styles["Title"]), Spacer(1, 18)]
     for line in [f"File: {escape(record['file'])}", f"Time: {record['time']}",
                  f"Predicted class: {record['label']}", f"Highest model score: {record['confidence']:.2f}%",
-                 *[f\"{k}: {v:.2f}%\" for k,v in record['scores'].items()],
+                 *[f\"\"{k}: {v:.2f}%\"\" for k,v in record['scores'].items()],
                  "Research only. Not a medical diagnosis. Scores are not calibrated clinical probabilities."]:
         story.extend([Paragraph(line, styles["Normal"]), Spacer(1, 9)])
     SimpleDocTemplate(buf, pagesize=A4).build(story)
@@ -130,7 +129,6 @@ if section == "🔬 Scan Analyzer":
                     st.progress(score_pct / 100.0)
                     st.write(f"{class_name}: **{score_pct:.2f}%**")
                 
-                # Try to import reportlab locally; if installed, offer report download
                 try:
                     import reportlab
                     pdf_data = report_pdf(res)
@@ -149,24 +147,19 @@ elif section == "📊 Analysis History":
         st.info("No images have been analyzed in this session yet. Results will appear here once you run a scan classification.")
     else:
         for i, item in enumerate(reversed(st.session_state.lung_history)):
-            st.markdown(f"""**Record #{len(st.session_state.lung_history)-i}** - *{item['time']}*
+            st.markdown(f\"\"\"**Record #{len(st.session_state.lung_history)-i}** - *{item['time']}*
 - **File Name:** {item['file']}
-- **Top Prediction:** `{item['label']}` ({item['confidence']:.2f}%)""")
+- **Top Prediction:** `{item['label']}` ({item['confidence']:.2f}%)\"\"\")
             st.write(item["scores"])
             st.divider()
 
 elif section == "ℹ️ About LungAI":
     st.subheader("Project Specifications & Model Configuration")
-    st.write("""This application utilizes a custom Convolutional Neural Network (CNN) trained directly on lung CT scan data.
+    st.write(\"\"\"This application utilizes a custom Convolutional Neural Network (CNN) trained directly on lung CT scan data.
     The user uploads an image, which is processed to run classification across three categories:
     - **Malignant**: High probability patterns indicating tumorous changes.
     - **Normal**: Clean scan tissue structure.
-    - **Benign**: Growth patterns not indicating aggressive malignancy.\""")
-    st.markdown("""**Disclaimer**: This tool is created for educational and research prototyping purposes only.
-    It should not be used as clinical advice or for medical diagnosis of any kind.""")
+    - **Benign**: Growth patterns not indicating aggressive malignancy.\"\"\")
+    st.markdown(\"\"\"**Disclaimer**: This tool is created for educational and research prototyping purposes only.
+    It should not be used as clinical advice or for medical diagnosis of any kind.\"\"\")
 """
-
-with open('app.py', 'w') as f:
-    f.write(app_py_content)
-
-print("Streamlit application script 'app.py' has been updated with the custom LungAI layout.")
