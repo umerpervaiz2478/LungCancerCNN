@@ -186,23 +186,25 @@ st.markdown("""
 }
 
 .hero h1 {
-    color: white;
-    font-size: clamp(2.2rem, 4.5vw, 3.5rem);
+    color: #ffffff;
+    font-size: clamp(2.1rem, 4vw, 3.4rem);
     font-weight: 800;
-    line-height: 1.15;
-    letter-spacing: -1.4px;
+    line-height: 1.2;
+    letter-spacing: -1.5px;
     margin: 0 0 18px;
 }
 
 .hero h1 span {
     display: block;
     color: #75ead7;
-    margin-top: 8px;
+    font-size: 0.75em;
+    margin-top: 10px;
+    letter-spacing: -0.5px;
 }
 
 .hero p {
     color: #d2e6ed;
-    font-size: 1.04rem;
+    font-size: 1.05rem;
     line-height: 1.8;
     max-width: 750px;
     margin: 0;
@@ -568,44 +570,33 @@ with st.sidebar:
         "for clinical diagnosis."
     )
 
+
 # ============================================================
-# 9. PROFESSIONAL HERO SECTION
+# 9. PROFESSIONAL HERO SECTION - FIXED
 # ============================================================
 
-# Dedent prevents Streamlit from displaying HTML as code.
-
-hero_html = textwrap.dedent("""
+hero_html = """
 <div class="hero">
-    <div class="hero-eyebrow">
-        DEEP LEARNING RESEARCH PLATFORM
-    </div>
-
-    <h1>
-        LungAI
-        <span>Intelligent Lung CT Analysis</span>
-    </h1>
-
-    <p>
-        A research-focused medical imaging platform
-        powered by a custom Convolutional Neural Network.
-        Analyze lung CT images, explore classification
-        results, and access complete project documentation
-        through one integrated dashboard.
-    </p>
-
-    <div class="hero-tags">
-        <span class="hero-tag">Custom CNN</span>
-        <span class="hero-tag">TensorFlow / Keras</span>
-        <span class="hero-tag">Three-Class Classification</span>
-        <span class="hero-tag">Academic Research</span>
-    </div>
+<div class="hero-eyebrow">DEEP LEARNING RESEARCH PLATFORM</div>
+<h1>LungAI <span>Intelligent Lung CT Analysis</span></h1>
+<p>A research-focused medical imaging platform powered by a custom
+Convolutional Neural Network. Analyze lung CT images, explore
+classification results, and access complete project documentation
+through one integrated dashboard.</p>
+<div class="hero-tags">
+<span class="hero-tag">Custom CNN</span>
+<span class="hero-tag">TensorFlow / Keras</span>
+<span class="hero-tag">Three-Class Classification</span>
+<span class="hero-tag">Academic Research</span>
 </div>
-""").strip()
+</div>
+"""
 
 st.markdown(
-    hero_html,
+    hero_html.strip(),
     unsafe_allow_html=True
 )
+
 
 # ============================================================
 # 10. PAGE: SCAN ANALYZER
