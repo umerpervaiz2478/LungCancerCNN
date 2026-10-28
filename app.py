@@ -744,52 +744,6 @@ with st.sidebar:
     )
 
 
-# ============================================================
-# 9. PROFESSIONAL HERO SECTION - FIXED
-# ============================================================
-
-import textwrap
-
-hero_html = textwrap.dedent("""
-<div class="hero">
-    <div class="hero-eyebrow">
-        DEEP LEARNING RESEARCH PLATFORM
-    </div>
-
-    <h1>
-        LungAI
-        <span>Intelligent Lung CT Analysis</span>
-    </h1>
-
-    <p>
-        An intelligent medical imaging research platform
-        powered by a custom Convolutional Neural Network.
-        Analyze lung CT scans, explore classification
-        results, and access complete research documentation
-        through one integrated dashboard.
-    </p>
-
-    <div class="hero-tags">
-        <span class="hero-tag">
-            Custom CNN
-        </span>
-        <span class="hero-tag">
-            TensorFlow / Keras
-        </span>
-        <span class="hero-tag">
-            Three-Class Classification
-        </span>
-        <span class="hero-tag">
-            Academic Research
-        </span>
-    </div>
-</div>
-""").strip()
-
-st.markdown(
-    hero_html,
-    unsafe_allow_html=True
-)
 
 # ============================================================
 # 10. PAGE: SCAN ANALYZER
