@@ -365,6 +365,11 @@ st.markdown(
         .hero h1 {
             letter-spacing: -0.8px;
         }
+        .hero h1 span {
+    display: block;
+    color: #75ead7;
+    margin-top: 8px;
+}
     }
     </style>
     """,
@@ -738,48 +743,52 @@ with st.sidebar:
         "Not intended for clinical diagnosis."
     )
 
+
 # ============================================================
-# 9. PROFESSIONAL HERO SECTION
+# 9. PROFESSIONAL HERO SECTION - FIXED
 # ============================================================
+
+import textwrap
+
+hero_html = textwrap.dedent("""
+<div class="hero">
+    <div class="hero-eyebrow">
+        DEEP LEARNING RESEARCH PLATFORM
+    </div>
+
+    <h1>
+        LungAI
+        <span>Intelligent Lung CT Analysis</span>
+    </h1>
+
+    <p>
+        An intelligent medical imaging research platform
+        powered by a custom Convolutional Neural Network.
+        Analyze lung CT scans, explore classification
+        results, and access complete research documentation
+        through one integrated dashboard.
+    </p>
+
+    <div class="hero-tags">
+        <span class="hero-tag">
+            Custom CNN
+        </span>
+        <span class="hero-tag">
+            TensorFlow / Keras
+        </span>
+        <span class="hero-tag">
+            Three-Class Classification
+        </span>
+        <span class="hero-tag">
+            Academic Research
+        </span>
+    </div>
+</div>
+""").strip()
 
 st.markdown(
-    """
-    <div class="hero">
-        <div class="hero-eyebrow">
-            DEEP LEARNING RESEARCH PLATFORM
-        </div>
-
-        <h1>
-            LungAI
-            <br>
-            <span>Intelligent Lung CT Analysis</span>
-        </h1>
-
-        <p>
-            A research-focused medical imaging platform
-            powered by a custom Convolutional Neural Network.
-            Explore lung CT image classification, review model
-            outputs, and access complete project documentation
-            through one integrated dashboard.
-        </p>
-
-        <div class="hero-tags">
-            <span class="hero-tag">
-                Convolutional Neural Network
-            </span>
-            <span class="hero-tag">
-                TensorFlow / Keras
-            </span>
-            <span class="hero-tag">
-                Three-Class Classification
-            </span>
-            <span class="hero-tag">
-                Academic Research
-            </span>
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
+    hero_html,
+    unsafe_allow_html=True
 )
 
 # ============================================================
