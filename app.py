@@ -18,7 +18,7 @@ from PIL import Image, UnidentifiedImageError
 
 st.set_page_config(
     page_title="LungAI | Intelligent Lung CT Analysis",
-    page_icon="L",
+    page_icon="🫁",
     layout="wide",
     initial_sidebar_state="expanded"
 )
