@@ -56,6 +56,11 @@ PROJECT_LINKS = {
         "?usp=sharing&ouid=100880821762278039102"
         "&rtpof=true&sd=true"
     ),
+    "LinkedIn": (
+    "https://www.linkedin.com/posts/"
+    "umer-pervaiz-0828013b0_deeplearning-artificialintelligence-"
+    "machinelearning-activity-7521451612066766849-eWrG"
+),
     "Project Report": (
         "https://docs.google.com/document/d/"
         "1XAgCHND2BPV4SZxJ1ugP7j8jjOvkO-YH/edit"
