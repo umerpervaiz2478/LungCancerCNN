@@ -101,6 +101,12 @@ RESOURCES = [
         "Project slides and research overview."
     ),
     (
+    "LinkedIn Project Post",
+    "LinkedIn",
+    "Read the official LungAI project announcement "
+    "and share your feedback on LinkedIn."
+),
+    (
         "YouTube Demonstration",
         "YouTube",
         "Recorded project demonstration."
